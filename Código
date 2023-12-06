@@ -1,9 +1,3 @@
-from copy import deepcopy
-from typing import Tuple, List
-from IPython.display import display
-from ipywidgets import HTML
-import math
-
 class Tablerolinja:
     
     def __init__(self, matrix):
@@ -13,16 +7,18 @@ class Tablerolinja:
         self.movimientoFila = 0
         self.movimiento = 0
         self.fichasFila = 0
-        self.rowNueva = 0
+        self.row_nueva = 0
         self.turnoExtra = False
     
     def __eq__(self, other) -> bool:  
         return self.getMatrix() == other.getMatrix()
     
+    # def __iter__(self):
+    #     # Devuelve un iterador sobre la matriz
+    #     return iter(self.matrix)
     
     def setMatrix(self, matrix):
         self.matrix = deepcopy(matrix)
-    
     
     def getMatrix(self) -> List[List]:
         return deepcopy(self.matrix)
@@ -156,7 +152,7 @@ class Tablerolinja:
         
         # Verificar que la ficha en la posición actual coincide con el turno actual
         if ficha != 0 and ficha != self.turno:
-            raise ValueError("No puedes mover una ficha del otro jugador.")
+            print("No puedes mover una ficha del otro jugador.")
 
         # Llamar al método correspondiente según el tipo de movimiento
         if self.movimiento == 0:
@@ -166,57 +162,95 @@ class Tablerolinja:
             # Llamar al segundo movimiento y devolver el resultado
             return self.movimiento2(row, col)
 
-
+    
     def movimiento1(self, row, col):
         ficha = self.matrix[row][col]
-        # Calcular la nueva fila a la que se moverá la ficha
-        self.row_nueva = row + 1 if ficha == 1 else (row - 1 if ficha == 2 else row)
         if ficha not in {1, 2}:
-            raise ValueError("No hay ficha en esa posición, elige otra en la que haya ficha.")
-
-        # Verifica si hay ficha en la fila de destino
-        if self.matrix[self.row_nueva][col] != 0:
-            
-            col_nueva = col
-            # Si hay ficha, desplaza lateralmente
-            if col == 0:
-                col_nueva = col + 1
-            elif col == 5: 
-                col_nueva = col - 1
-                
-            # Verificar si la nueva posición es válida
-            if self.comprobarPosicion(self.row_nueva, col_nueva):
-                self.fichasFila = self.numFichasEnFila(self.row_nueva)
-                    
-                # Mover ficha
-                self.deleteTile(row, col)
-                self.placeTile(self.row_nueva, col_nueva, ficha)
+            print("No hay ficha en esa posición, elige otra en la que haya ficha.")
+        # Calcular la nueva fila a la que se moverá la ficha
+        # self.row_nueva = row + 1 if ficha == 1 else (row - 1 if ficha == 2 else row)
+        if(row + 1 <= 7 and ficha == 1):
+            self.row_nueva = row + 1
+        elif(row - 1 >= 0  and ficha == 2):
+            self.row_nueva = row - 1
+        elif(row + 1 > 7 and ficha == 1):
+            self.row_nueva = 7
+        elif(row - 1 < 0 and ficha == 2):
+            self.row_nueva = 0
         else:
-            # Verificar si la nueva posición es válida
-            if self.comprobarPosicion(self.row_nueva, col):
-                self.fichasFila = self.numFichasEnFila(self.row_nueva)
-                      
-                # Mover ficha
-                self.deleteTile(row, col)
-                self.placeTile(self.row_nueva, col, ficha)
-        # Verificar si la ficha no cae en una fila vacía
-        if self.numFichasEnFila(self.row_nueva) > 0:
-            # Cambiar el valor del atributo movimiento a 1, indicando que se puede hacer el segundo movimiento
-            self.movimiento = 1
-        elif self.numFichasEnFila(self.row_nueva) == 0:
-            self.cambiarTurno()
-                
-            # Devolver 1 indicando que el movimiento fue válido
-            return 1
-        else:
-            # Devolver 0 indicando que el movimiento no fue válido
             return 0
+        # Verificar si el jugador no alcanzó el extremo opuesto
+        if 0 <= self.row_nueva < len(self.matrix):
+            col_nueva = col
+            # Verificar si hay ficha en la fila de destino
+            if self.matrix[self.row_nueva][col] != 0:
+                col_candidata = col_nueva
+                # Si hay ficha, desplaza lateralmente hacia la derecha o izquierda
+                # Creo una variable booleana que indique si se ha encontrado una columna vacía
+                encontrado = False
+                print('a',col_candidata)
+                i = 1  # Comenzar con el primer desplazamiento
+                while i <= 5 and not encontrado:
+                    col_candidata = col_nueva + i
+                    # Verificar si la columna candidata está dentro del rango válido
+                    if 0 <= col_candidata < len(self.matrix[0]):
+                        # Verificar si la columna candidata está vacía
+                        if self.matrix[self.row_nueva][col_candidata] == 0:
+                            # Asignar la columna candidata a la variable col_nueva
+                            col_nueva = col_candidata
+                            # Cambiar el valor de la variable encontrado a True
+                            encontrado = True
+                            # Romper el bucle cuando se encuentre una columna vacía
+                            break
+                    i += 1
+                    print('b',col_candidata)
+                i = 1  # Restablecer el valor de i para el desplazamiento hacia la izquierda
+                while i <= 5 and not encontrado:
+                    col_candidata = col_nueva - i
+                    # Verificar si la columna candidata está dentro del rango válido
+                    if 0 <= col_candidata < len(self.matrix[0]):
+                        # Verificar si la columna candidata está vacía
+                        if self.matrix[self.row_nueva][col_candidata] == 0:
+                            # Asignar la columna candidata a la variable col_nueva
+                            col_nueva = col_candidata
+                            # Cambiar el valor de la variable encontrado a True
+                            encontrado = True
+                            # Romper el bucle cuando se encuentre una columna vacía
+                            break
+                    i += 1  
+                    print('c',col_candidata) 
+                # Verificar si la nueva posición es válida
+                if self.comprobarPosicion(self.row_nueva, col_nueva):
+                    self.fichasFila = self.numFichasEnFila(self.row_nueva)
+                    if self.numFichasEnFila(self.row_nueva) > 0:
+                        # Cambiar el valor del atributo movimiento a 1, indicando que se puede hacer el segundo movimiento
+                        self.movimiento = 1           
+                    elif self.numFichasEnFila(self.row_nueva) == 0:
+                        self.cambiarTurno()    
+                    # Mover ficha
+                    self.deleteTile(row, col)
+                    self.placeTile(self.row_nueva, col_nueva, ficha)
+                    return 1
+            else:
+                # Verificar si la nueva posición es válida
+                if self.comprobarPosicion(self.row_nueva, col):
+                    self.fichasFila = self.numFichasEnFila(self.row_nueva)
+                    if self.numFichasEnFila(self.row_nueva) > 0:
+                        # Cambiar el valor del atributo movimiento a 1, indicando que se puede hacer el segundo movimiento
+                        self.movimiento = 1           
+                    elif self.numFichasEnFila(self.row_nueva) == 0:
+                        self.cambiarTurno() 
+                    # Mover ficha
+                    self.deleteTile(row, col)
+                    self.placeTile(self.row_nueva, col, ficha)
+                    return 1
+        return 0
     
     
     def movimiento2(self, row, col):
         ficha = self.matrix[row][col]
         if ficha not in {1, 2}:
-            raise ValueError("No hay ficha en esa posición, elige otra en la que haya ficha.")
+            print("No hay ficha en esa posición, elige otra en la que haya ficha.")
         # Usar el valor de row que se ha pasado como parámetro
         row_nueva = row
         # Creo una variable booleana que indica si el jugador ha llegado al extremo opuesto
@@ -227,37 +261,64 @@ class Tablerolinja:
             if num_fichas_en_fila == 0: 
                 row_nueva = row
             else:
-                row_nueva = row + num_fichas_en_fila if ficha == 1 else row - num_fichas_en_fila
+                if(row + num_fichas_en_fila <= 7 and ficha == 1):
+                    row_nueva = row + num_fichas_en_fila
+                elif(row - num_fichas_en_fila >= 0  and ficha == 2):
+                    row_nueva = row - num_fichas_en_fila
+                elif(row + num_fichas_en_fila > 7 and ficha == 1):
+                    row_nueva = 7
+                elif(row - num_fichas_en_fila < 0 and ficha == 2):
+                    row_nueva = 0
+                else:
+                    return 0
             if self.row_nueva == 7 and ficha == 1:
                 self.deleteTile(row, col)
-                self.placeTile(row + 1, col, ficha)
+                self.placeTile(row_nueva, col, ficha) 
+                '''En caso de dar problemas modificar este row_nueva por row + 1'''
                 extremo_opuesto = True
             elif self.row_nueva == 0 and ficha == 2:
                 self.deleteTile(row, col)
-                self.placeTile(row - 1, col, ficha)
+                self.placeTile(row_nueva, col, ficha)
+                '''En caso de dar problemas modificar este row_nueva por row - 1'''
                 extremo_opuesto = True    
+            col_nueva = col
             # Verificar si el jugador no alcanzó el extremo opuesto
-            if row_nueva not in [0, len(self.matrix) - 1] and extremo_opuesto == False:
-                # Verifica si hay ficha en la fila de destino
+            if row_nueva not in [0, len(self.matrix)] and not extremo_opuesto:
+                # Verificar si hay ficha en la fila de destino
                 if self.matrix[row_nueva][col] != 0:
-                    col_nueva = col
-                    # Si hay ficha, desplaza lateralmente
-                    if 0 <= col < len(self.matrix[0]):
-                        for i in range(len(self.matrix[0])):
-                            # Asignar la dirección según la columna
-                            if 0 <= col <= 2:
-                                col_candidata = col + 1
-                            elif 4 <= col <= 6:
-                                col_candidata = col - 1
-                            # Verificar si la columna candidata está dentro del rango válido
-                            if 0 <= col_candidata < len(self.matrix[0]):
-                                # Verificar si la columna candidata está vacía
-                                if self.matrix[row_nueva][col_candidata] == 0:
-                                    # Asignar la columna candidata a la variable col_nueva
-                                    col_nueva = col_candidata
-                                    # Salir del bucle
-                                    break
+                    col_candidata = col_nueva
+                    # Si hay ficha, desplaza lateralmente hacia la derecha o izquierda
+                    # Creo una variable booleana que indique si se ha encontrado una columna vacía
+                    encontrado = False
+                    i = 1  # Comenzar con el primer desplazamiento
+                    while i <= 5 and not encontrado:
+                        col_candidata = col_nueva + i
+                        # Verificar si la columna candidata está dentro del rango válido
+                        if 0 <= col_candidata < len(self.matrix[0]):
+                            # Verificar si la columna candidata está vacía
+                            if self.matrix[row_nueva][col_candidata] == 0:
+                                # Asignar la columna candidata a la variable col_nueva
+                                col_nueva = col_candidata
+                                # Cambiar el valor de la variable encontrado a True
+                                encontrado = True
+                                # Romper el bucle cuando se encuentre una columna vacía
+                                break
+                        i += 1
 
+                    i = 1  # Restablecer el valor de i para el desplazamiento hacia la izquierda
+                    while i <= 5 and not encontrado:
+                        col_candidata = col_nueva - i
+                        # Verificar si la columna candidata está dentro del rango válido
+                        if 0 <= col_candidata < len(self.matrix[0]):
+                            # Verificar si la columna candidata está vacía
+                            if self.matrix[row_nueva][col_candidata] == 0:
+                                # Asignar la columna candidata a la variable col_nueva
+                                col_nueva = col_candidata
+                                # Cambiar el valor de la variable encontrado a True
+                                encontrado = True
+                                # Romper el bucle cuando se encuentre una columna vacía
+                                break
+                        i += 1
                     # Verificar si la nueva posición es válida
                     if self.comprobarPosicion(row_nueva, col_nueva):
                         self.fichasFila = self.numFichasEnFila(row_nueva)   
@@ -270,19 +331,19 @@ class Tablerolinja:
                         self.fichasFila = self.numFichasEnFila(row_nueva)        
                         # Mover ficha
                         self.deleteTile(row, col)
-                        self.placeTile(row_nueva, col, ficha) 
+                        self.placeTile(row_nueva, col, ficha)
             # Verificar si la ficha no cae en una fila vacía
             if self.numFichasEnFila(row_nueva) - 1 > 0:
                 # Cambiar el valor del atributo movimiento a 1, indicando que se puede hacer el segundo movimiento
                 self.movimiento = 0
                 if self.turnoExtra == 1:
-                    self.turnoExtra = False 
+                    self.turnoExtra = False                                             
             elif self.numFichasEnFila(row_nueva) - 1 == 0:
                 self.movimiento = 0
                 self.turnoExtra = True
                 #SEGUNDO, hacer que solo se pueda 1 vez un turno extra
             if self.turnoExtra == False:
-                self.cambiarTurno()     
+                self.cambiarTurno()  
             return 1
         else:
             return 0
@@ -338,133 +399,48 @@ class Tablerolinja:
 
         html_string += "</table>"
         return html_string
-      
-        
-def miniMax(state:Tablerolinja, currentLevel:int, maxLevel:int, player:int, alpha:int, beta:int, stop:bool) -> Tuple[Tablerolinja, int, bool]:
-
-    matriz=state.getMatrix()
     
-    # Defino las matrices de sucesores
     
-    successorMatrices = []
+    def moveCanBeMade(self, player: int) -> bool:
+        for row in range(len(self.matrix)):
+            for col in range(len(self.matrix[0])):
+                if self.comprobarPosicion(row, col) and self.matrix[row][col] == player:
+                    return True
+        return False
     
-    if (not state.moveCanBeMade(player) or currentLevel == maxLevel):
-        return (state.matrix,state.utility(),stop)  
-    # successorMatrices = state.generateSuccessors(player)
-    # ====================================================================================================
-    #
-    # A esta altura, si queréis podéis definir la fórmula de la función de coste, o llamarla.
-    #
-    # ====================================================================================================
     
-    # Actualizo el conjunto de las matrices de sucesores
-    
-    def generateSuccessors(player):
-        sucesores = []
-        
-        def iteraGenerateSuccessors(matrix, player, profundidad):
-            if profundidad == 2:
-                return
-            
-            for row in range(0, 8):
-                for col in range(0, 6):
-    # =========================================================================================
-    # Voy a generar el conjunto de los potenciales HIJOS/SUCESORES (en "successorMatrices"), y los voy a ir añadiendo
-    # a "successormatrices".
-    #
-    # COMPLETAD, REHACED...COMO VEÁIS...
-    #
-    # La variable "successorBoard" bajo DEFINE UNO de los potenciales HIJOS.
-    #
-    # =========================================================================================           
-                    tableroCopia = deepcopy(matrix)
-                    if player == 2:
-                        tableroCopia.cambiarTurno()       
-                        sucesores.append(tableroCopia)
-                        iteraGenerateSuccessors(tableroCopia, player, profundidad + 1)
-        
-        iteraGenerateSuccessors(matrix, player, 0)
-        return sucesores
-    successorMatrices = state.generateSuccessors(player)
-    # successorMatrices.append(successorBoard)
-          
-     
-    if len(successorMatrices) == 0:
-        stopDigging = True
-        coste=state.utility()
-        return (state,coste,stopDigging)
-    
-    bestMatrix = None
-    
-            
-    if player == 2:                    
-        maxValue = -math.inf #alpha
-        
-        for i in range(0, len(successorMatrices)):            
-            
-                # mat = Tablerolinja(successorMatrices[i]) 
-                mat = successorMatrices[i]           
-                matrizS, utility, stop = miniMax(mat, currentLevel + 1, maxLevel, 1, alpha,beta,stop)
-                best = utility 
-            
-                if best > maxValue:
-                    maxValue = best
-                    bestMatrix = mat
-
-                # COSAS...
-            
-                alpha = max(alpha, best)                
-                if best >= beta:                 
-                    return (matrizS,best,stop)     
-    else:                           
-        minValue = math.inf #beta
-        for i in range(0, len(successorMatrices)):
-                # mat = Tablerolinja(successorMatrices[i])
-                mat = successorMatrices[i]
-                matrizS, utility, stop = miniMax(mat, currentLevel + 1, maxLevel, 2, alpha,beta,stop)
-            
-            
-                if utility < minValue:
+    def generateSuccessors(self, player):
+            successors = []
+            for row in range(len(self.matrix)):
+                for col in range(len(self.matrix[0])):
                 
-                    minValue = utility
-                    bestMatrix = mat
-
-                # COSAS...
-            
-                beta = min(beta, utility)
-                if utility <= alpha:                    
+                    if self.matrix[row][col] == player:
                 
-                   return (matrizS,utility,stop)
-         
-     # Toda esta parte, a rellenar.
-        
-    return (bestMatrix,utility,stop)
+                        # Copia del tablero original
+                        tablero_copy = Tablerolinja(self.matrix)  
+                        if tablero_copy.moverFicha(row, col) == 1:                       
+                            successors.append(tablero_copy)
+                            for row in range(len(self.matrix)):
+                                for col in range(len(self.matrix[0])):    
+                                    # # Copia del tablero original 
+                                    # tablero_copy = deepcopy(tablero)  
+
+                                    # Actualizar turno
+                                    # tablero_copy.turno = player
+                                    
+                                    # Simular movimiento 2 
+                                    tablero_copy.movimiento = 1
+                                    if tablero_copy.moverFicha(row, col) == 1: 
+                                        successors.append(tablero_copy)
+                                        print(len(successors))
+                        if len(successors) == 6:
+                            break
+            return successors    
+
 
     
-
-# Imprimir el tablero original
-matrix = [[1, 1, 1, 1, 1, 1],
-          [1, 0, 0, 0, 0, 2],
-          [1, 0, 0, 0, 0, 2],
-          [1, 0, 0, 0, 0, 2],
-          [1, 0, 0, 0, 0, 2],
-          [1, 0, 0, 0, 0, 2],
-          [1, 0, 0, 0, 0, 2],
-          [2, 2, 2, 2, 2, 2]]
-
-tablero = Tablerolinja(matrix)
-
-tablero.moverFicha(0,3)
-tablero.moverFicha(0,0)
-# tablero.moverFicha(0,3)
-# tablero.moverFicha(0,4)
-tablero.moverFicha(7,3)
-tablero.moverFicha(7,5)
-tablero.moverFicha(0,2)
-tablero.moverFicha(0,1)
-tablero.moverFicha(7,1)
-tablero.moverFicha(7,2)
-
-
-html = tablero.get_html()
-HTML(html)
+    
+    def toString(self):
+        for i in range (0,8):
+            print(self.matrix[i])
+        print("")
