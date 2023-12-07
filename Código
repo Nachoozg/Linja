@@ -1,3 +1,6 @@
+
+
+
 class Tablerolinja:
     
     def __init__(self, matrix):
@@ -13,9 +16,9 @@ class Tablerolinja:
     def __eq__(self, other) -> bool:  
         return self.getMatrix() == other.getMatrix()
     
-    # def __iter__(self):
-    #     # Devuelve un iterador sobre la matriz
-    #     return iter(self.matrix)
+    def __iter__(self):
+        # Devuelve un iterador sobre la matriz
+        return iter(self.matrix)
     
     def setMatrix(self, matrix):
         self.matrix = deepcopy(matrix)
@@ -157,11 +160,15 @@ class Tablerolinja:
         # Llamar al método correspondiente según el tipo de movimiento
         if self.movimiento == 0:
             # Llamar al primer movimiento y devolver el resultado
-            return self.movimiento1(row, col)
+            resultado_movimiento = self.movimiento1(row, col)
         elif self.movimiento == 1:
             # Llamar al segundo movimiento y devolver el resultado
-            return self.movimiento2(row, col)
-
+            resultado_movimiento = self.movimiento2(row, col)
+        if self.finJuego():
+            print("El juego ha terminado, no mueva más fichas")
+            self.endGame()
+        return resultado_movimiento
+    
     
     def movimiento1(self, row, col):
         ficha = self.matrix[row][col]
@@ -188,7 +195,6 @@ class Tablerolinja:
                 # Si hay ficha, desplaza lateralmente hacia la derecha o izquierda
                 # Creo una variable booleana que indique si se ha encontrado una columna vacía
                 encontrado = False
-                print('a',col_candidata)
                 i = 1  # Comenzar con el primer desplazamiento
                 while i <= 5 and not encontrado:
                     col_candidata = col_nueva + i
@@ -203,7 +209,6 @@ class Tablerolinja:
                             # Romper el bucle cuando se encuentre una columna vacía
                             break
                     i += 1
-                    print('b',col_candidata)
                 i = 1  # Restablecer el valor de i para el desplazamiento hacia la izquierda
                 while i <= 5 and not encontrado:
                     col_candidata = col_nueva - i
@@ -218,7 +223,6 @@ class Tablerolinja:
                             # Romper el bucle cuando se encuentre una columna vacía
                             break
                     i += 1  
-                    print('c',col_candidata) 
                 # Verificar si la nueva posición es válida
                 if self.comprobarPosicion(self.row_nueva, col_nueva):
                     self.fichasFila = self.numFichasEnFila(self.row_nueva)
@@ -348,11 +352,42 @@ class Tablerolinja:
         else:
             return 0
 
+    
+    def finJuego(self):
+        # Inicializamos las variables que guardan la posición de la ficha más atrasada de cada tipo
+        fila_2 = -1
+        col_2 = -1
+        fila_1 = len (self.matrix) 
+        col_1 = len (self.matrix[0])
 
-    # TODO -- para el final del juego poner que si todas las de un color han pasado a los del otro termina
+        # Recorremos el tablero de arriba a abajo para buscar la ficha más atrasada de las fichas 2
+        for i in range (len (self.matrix)):
+            # Si hay alguna ficha 2 en la fila i, usamos index (2) para obtener su columna
+            if 2 in self.matrix [i]:
+                j = self.matrix [i].index (2)
+                # Si la fila i es mayor que la fila guardada, o si la fila es la misma pero la columna es menor, actualizamos la posición de la ficha más atrasada
+                if i > fila_2 or (i == fila_2 and j < col_2):
+                    fila_2 = i
+                    col_2 = j
+
+        # Recorremos el tablero de abajo a arriba para buscar la ficha más atrasada de las fichas 1
+        for i in range (len (self.matrix) - 1, -1, -1):
+            # Si hay alguna ficha 1 en la fila i, usamos index (1) para obtener su columna
+            if 1 in self.matrix [i]:
+                j = self.matrix [i].index (1)
+                # Si la fila i es menor que la fila guardada, o si la fila es la misma pero la columna es menor, actualizamos la posición de la ficha más atrasada
+                if i < fila_1 or (i == fila_1 and j < col_1):
+                    fila_1 = i
+                    col_1 = j
+        
+        if fila_2 < fila_1:
+            return True
+        return False
+        
+
     def endGame(self) -> int:
         utilidad = self.utility()
-        # Va a determinar qué jugador es el ganador. Se puede poner tal que: Rojo = 1 y negro = 2, por ejemplo.
+        # Va a determinar qué jugador es el ganador.
         if utilidad > 0:
             return 1  # Rojo gana
         elif utilidad < 0:
@@ -409,36 +444,54 @@ class Tablerolinja:
         return False
     
     
-    def generateSuccessors(self, player):
-            successors = []
-            for row in range(len(self.matrix)):
-                for col in range(len(self.matrix[0])):
+    # def generateSuccessors(self, player):
+    #         successors = []
+    #         for row in range(len(self.matrix)):
+    #             for col in range(len(self.matrix[0])):
                 
-                    if self.matrix[row][col] == player:
+    #                 if self.matrix[row][col] == player:
                 
-                        # Copia del tablero original
-                        tablero_copy = Tablerolinja(self.matrix)  
-                        if tablero_copy.moverFicha(row, col) == 1:                       
-                            successors.append(tablero_copy)
-                            for row in range(len(self.matrix)):
-                                for col in range(len(self.matrix[0])):    
-                                    # # Copia del tablero original 
-                                    # tablero_copy = deepcopy(tablero)  
+    #                     # Copia del tablero original
+    #                     tablero_copy = Tablerolinja(self.matrix)  
+    #                     if tablero_copy.moverFicha(row, col) == 1:                       
+    #                         successors.append(tablero_copy)
+    #                         for row in range(len(self.matrix)):
+    #                             for col in range(len(self.matrix[0])):    
+    #                                 # # Copia del tablero original 
+    #                                 # tablero_copy = deepcopy(tablero)  
 
-                                    # Actualizar turno
-                                    # tablero_copy.turno = player
+    #                                 # Actualizar turno
+    #                                 # tablero_copy.turno = player
                                     
-                                    # Simular movimiento 2 
-                                    tablero_copy.movimiento = 1
-                                    if tablero_copy.moverFicha(row, col) == 1: 
-                                        successors.append(tablero_copy)
-                                        print(len(successors))
-                        if len(successors) == 6:
-                            break
-            return successors    
-
-
+    #                                 # Simular movimiento 2 
+    #                                 tablero_copy.movimiento = 1
+    #                                 if tablero_copy.moverFicha(row, col) == 1: 
+    #                                     successors.append(tablero_copy)
+    #                                     print(len(successors))
+    #                     if len(successors) == 6:
+    #                         break
+    #         return successors  
     
+    def generateSuccessors(self, playerID: int):
+        successors = []
+        for row in range(len(self.matrix)):
+            for col in range(len(self.matrix[0])):
+                tablero_copy = Tablerolinja(self.matrix)  
+                if(playerID==2):
+                    tablero_copy.changePlayer()
+                #copied_board.toString()
+                if tablero_copy.comprobarPosicion(row, col):
+                    tablero_copy.moverFicha(row, col)
+                    for row_ in range(len(self.matrix)):
+                        for col_ in range(len(self.matrix[0])):
+                            copied_board_2 = copy.deepcopy(tablero_copy)  
+                            if copied_board_2.comprobarPosicion(row_, col_):
+                                copied_board_2.moverFicha(row_, col_)
+                                if(len(successors)==5):
+                                    break
+                                successors.append(copied_board_2)
+        return successors  
+
     
     def toString(self):
         for i in range (0,8):
